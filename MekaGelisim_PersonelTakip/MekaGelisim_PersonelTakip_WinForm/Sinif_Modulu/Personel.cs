@@ -5,6 +5,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace MekaGelisim_PersonelTakip_WinForm.Sinif_Modulu
 {
@@ -17,7 +18,7 @@ namespace MekaGelisim_PersonelTakip_WinForm.Sinif_Modulu
         private string _personelSoyad;
         private string _telefon;
         private string _departman;
-        private string _adres
+        private string _adres;
         private string _durum;
         private string _iban;
         private double _sabitMaas;
@@ -222,6 +223,176 @@ namespace MekaGelisim_PersonelTakip_WinForm.Sinif_Modulu
             conn.Close();
             return varMi;
         }
+        public bool PersonelKontrol(string ID,string TCKN)
+        {
+            bool Varmi = false;
+            SqlCommand cmd = new SqlCommand("SELECT * FROM Tbl_Personel where ID != @ID and TCKN=@TCKN",conn);
+            cmd.Parameters.Add("@ID", SqlDbType.VarChar).Value = ID;
+            cmd.Parameters.Add("@TCKN", SqlDbType.VarChar).Value = TCKN;
+            if (conn.State == ConnectionState.Closed) conn.Open();
+            SqlDataReader dr = cmd.ExecuteReader();
+            if (dr.HasRows)
+                Varmi = true;
+            dr.Close();
+            conn.Close();
+            return Varmi;
+        }
+        public void PersonelleriGetir(ListView liste)
+        {
+            liste.Items.Clear();
+            SqlCommand cmd = new SqlCommand("SELECT ID,TCKN,PersonelAdi,PersonelSoyadi,Telefon,Adres,Departman,Durum from Tbl_Personel where Silindi=0", conn);
+            if (conn.State == ConnectionState.Closed)
+                conn.Open();
+            SqlDataReader dr = cmd.ExecuteReader();
+            if (dr.HasRows)
+            {
+                int i = 0;
+                while (dr.Read())
+                {
+                    liste.Items.Add(dr[0].ToString());
+                    liste.Items[i].SubItems.Add(dr[1].ToString());
+                    liste.Items[i].SubItems.Add(dr[2].ToString());
+                    liste.Items[i].SubItems.Add(dr[3].ToString());
+                    liste.Items[i].SubItems.Add(dr[4].ToString());
+                    liste.Items[i].SubItems.Add(dr[5].ToString());
+                    liste.Items[i].SubItems.Add(dr[6].ToString());
+                    liste.Items[i].SubItems.Add(dr[7].ToString());
+                    i++;
+                }
+            }
+            dr.Close();
+            conn.Close();
+        }
+        public void PersonelleriGetirForIzin(ListView liste)
+        {
+            liste.Items.Clear();
+            SqlCommand cmd = new SqlCommand("Select ID,PersonelAdi,PersonelSoyadi,Telefon,Adres,ToplamRaporlu,ToplamUcretli,ToplamUcretsiz from Personel where Silindi=0", conn);
+            if (conn.State == ConnectionState.Closed) conn.Open();
+            SqlDataReader dr = cmd.ExecuteReader();
+            if (dr.HasRows)
+            {
+                int i = 0;
+                while (dr.Read())
+                {
+                    liste.Items.Add(dr[0].ToString());
+                    liste.Items[i].SubItems.Add(dr[1].ToString());
+                    liste.Items[i].SubItems.Add(dr[2].ToString());
+                    liste.Items[i].SubItems.Add(dr[3].ToString());
+                    liste.Items[i].SubItems.Add(dr[4].ToString());
+                    liste.Items[i].SubItems.Add(dr[5].ToString());
+                    liste.Items[i].SubItems.Add(dr[6].ToString());
+                    liste.Items[i].SubItems.Add(dr[7].ToString());
+                    i++;
+                }
+            }
+            dr.Close();
+            conn.Close();
+        }
+        public void PersonelleriGetirForMesai(ListView liste)
+        {
+            liste.Items.Clear();
+            SqlCommand cmd = new SqlCommand("SELECT ID,TCKN,PersonelAdi,PersonelSoyadi,Telefon,Adres,Departman,Durum from Tbl_Personel where Silindi=0", conn);
+            if (conn.State == ConnectionState.Closed) conn.Open();
+            SqlDataReader dr = cmd.ExecuteReader();
+            if (dr.HasRows)
+            {
+                int i = 0;
+                while (dr.Read())
+                {
+                    liste.Items.Add(dr[0].ToString());
+                    liste.Items[i].SubItems.Add(dr[2].ToString());
+                    liste.Items[i].SubItems.Add(dr[3].ToString());
+                    liste.Items[i].SubItems.Add(dr[4].ToString());
+                    liste.Items[i].SubItems.Add(dr[5].ToString());
+                    i++;
+                }
+            }
+            dr.Close();
+            conn.Close();
+        }
+        public void PersonelleriGetir(int ID, Personel p)
+        {
+            SqlCommand cmd = new SqlCommand("Select TCKN,PersonelAdi,PersonelSoyadi,Telefon,Adres,Departman,Durum,CikisTarihi,GirisTarihi,IBAN,SabitMaas,ToplamRaporlu,ToplamUcretli,ToplamUcretsiz from Tbl_Personel where ID=@ID and Silindi=0", conn);
+            cmd.Parameters.Add("@ID", SqlDbType.Int).Value = ID;
+            if (conn.State == ConnectionState.Closed) conn.Open();
+            SqlDataReader dr = cmd.ExecuteReader();
+            dr.Read();
+            if (dr.HasRows)
+            {
+                p.TCKN = dr[0].ToString();
+                p.PersonelAd = dr[1].ToString();
+                p.PersonelSoyad = dr[2].ToString();
+                p.Telefon = dr[3].ToString();
+                p.Adres = dr[4].ToString();
+                p.Departman = dr[5].ToString();
+                p.Durum = dr[6].ToString();
+                p.CikisTarihi = Convert.ToDateTime(dr[7].ToString()).ToShortDateString(); //tarih formatı GG.AA.YYYY
+                p.GirisTarihi= Convert.ToDateTime(dr[8].ToString()).ToShortDateString(); //tarih formatı GG.AA.YYYY
+                p.Iban = dr[9].ToString();
+                p.ToplamRaporlu = Convert.ToInt32(dr[10]);
+                p.ToplamUcretli= Convert.ToInt32(dr[11]);
+                p.ToplamUcretsiz= Convert.ToInt32(dr[12]);
+            }
+            dr.Close();
+            conn.Close();
+        }
+        public void PersonelleriGetirByArama(string ID, string TCKN, string Adi, string Soyadi,string Telefon, string Adres, string Departman, ListView liste)
+        {
+            liste.Items.Clear();
+            SqlCommand cmd = new SqlCommand("Select ID, TCKN, PersonelAdi, PersonelSoyadi, Telefon, Adres, Departman, Durum from Personel where Silindi=0 and ID like @ID +'%' and TCKN like @TCKN + '%' and PersonelAdi like @Adi +'%' and PersonelSoyadi like @Soyadi +'%' and Telefon like @Telefon + '%' and Adres like @Adres + '%' and Departman like @Departman +'%'", conn);
+            cmd.Parameters.Add("@ID", SqlDbType.VarChar).Value = ID;
+            cmd.Parameters.Add("@TCKN", SqlDbType.VarChar).Value = TCKN;
+            cmd.Parameters.Add("@Adi", SqlDbType.VarChar).Value = Adi;
+            cmd.Parameters.Add("@Soyadi", SqlDbType.VarChar).Value = Soyadi;
+            cmd.Parameters.Add("@Telefon", SqlDbType.VarChar).Value = Telefon;
+            cmd.Parameters.Add("@Adres", SqlDbType.VarChar).Value = Adres;
+            cmd.Parameters.Add("@Departman", SqlDbType.VarChar).Value = Departman;
+            if (conn.State == ConnectionState.Closed) conn.Open();
+            SqlDataReader dr = cmd.ExecuteReader();
+            if (dr.HasRows)
+            {
+                int i = 0;
+                while (dr.Read())
+                {
+                    liste.Items.Add(dr[0].ToString());
+                    liste.Items[i].SubItems.Add(dr[1].ToString());
+                    liste.Items[i].SubItems.Add(dr[2].ToString());
+                    liste.Items[i].SubItems.Add(dr[3].ToString());
+                    liste.Items[i].SubItems.Add(dr[4].ToString());
+                    liste.Items[i].SubItems.Add(dr[5].ToString());
+                    liste.Items[i].SubItems.Add(dr[6].ToString());
+                    liste.Items[i].SubItems.Add(dr[7].ToString());
+                    i++;
+                }
+            }
+        }
+        public void PersonelleriGetirByIzinArama(string Adi,string Soyadi, ListView liste)
+        {
+            liste.Items.Clear();
+            SqlCommand cmd = new SqlCommand("Select ID, PersonelAdi, PersonelSoyadi, Telefon, Adres, Toplam Raporlu, Toplam Ucretli, ToplamUcretsiz from Tbl_Personel where Silindi=0 and PersonelAdi like @Adi +'%' and PersonelSoyadi like @Soyadi +'%'", conn);
+            cmd.Parameters.Add("@Adi", SqlDbType.VarChar).Value = Adi;
+            cmd.Parameters.Add("@Soyadi", SqlDbType.VarChar).Value = Soyadi;
+            if (conn.State == ConnectionState.Closed) conn.Open();
+            SqlDataReader dr = cmd.ExecuteReader();
+            if (dr.HasRows)
+            {
+                int i = 0;
+                while (dr.Read())
+                {
+                    liste.Items.Add(dr[0].ToString());
+                    liste.Items[i].SubItems.Add(dr[1].ToString());
+                    liste.Items[i].SubItems.Add(dr[2].ToString());
+                    liste.Items[i].SubItems.Add(dr[3].ToString());
+                    liste.Items[i].SubItems.Add(dr[4].ToString());
+                    liste.Items[i].SubItems.Add(dr[5].ToString());
+                    liste.Items[i].SubItems.Add(dr[6].ToString());
+                    liste.Items[i].SubItems.Add(dr[7].ToString());
+                    i++;
+                }
+            }
+            dr.Close();
+            conn.Close();
+        }
         public bool PersonelSil(int ID)
         {
             bool Sonuc = false;
@@ -242,26 +413,13 @@ namespace MekaGelisim_PersonelTakip_WinForm.Sinif_Modulu
             finally { conn.Close(); }
             return Sonuc;
         }
-        public bool PersonelTamSil(int ID)
+        public bool IzinGunSayisiEkle(int ID, string IzinTipi, int Gun)
         {
             bool Sonuc = false;
-            SqlCommand cmd = new SqlCommand("Delete From Tbl_Personel where ID=@ID", conn);
-            cmd.Parameters.Add("@ID", SqlDbType.Int).Value = ID;
-            if (conn.State == ConnectionState.Closed)
-            {
-                conn.Open();
-            }
-            try
-            {
-                Sonuc = Convert.ToBoolean(cmd.ExecuteNonQuery());
-            }
-            catch (SqlException ex)
-            {
-                string hata = ex.Message;
-            }
-            finally { conn.Close(); }
+
             return Sonuc;
         }
+
         #endregion
 
         /*
